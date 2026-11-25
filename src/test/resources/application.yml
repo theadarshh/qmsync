@@ -1,0 +1,17 @@
+# Deliberately does not configure spring.datasource.* -- AbstractIntegrationTest's
+# @ServiceConnection-annotated Testcontainers MySQL instance supplies connection
+# details automatically. Redeclaring them here would just be a second, competing
+# source of truth for the same thing.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{requestId}] %logger{36} - %msg%n"

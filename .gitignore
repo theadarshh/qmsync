@@ -1,0 +1,25 @@
+# Environment / secrets
+.env
+
+# Build output
+target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Note: .mvn/wrapper/, mvnw, and mvnw.cmd are intentionally NOT ignored --
+# they must be committed so a fresh checkout needs no pre-installed Maven.

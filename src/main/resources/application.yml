@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: qmsync
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:qmsync}?useUnicode=true&characterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # No files exist at this location in Phase 0's main resources.
+    # See src/test/resources/db/migration for the Flyway mechanism test.
+    # Phase 1 creates the genuine first application migration here.
+
+  jpa:
+    # Flyway owns the schema. Hibernate must never create, update or validate it.
+    # (M1 adds no production migration, so 'validate' would fail on a missing table anyway.)
+    # ConfigurationGuardTest pins this value in this file. Test contexts shadow this file with
+    # src/test/resources/application.yml, so PersistenceConfigurationTest checks the effective setting.
+    hibernate:
+      ddl-auto: none
+
+# Only the health endpoint is exposed. No env, beans, metrics, mappings,
+# configprops, or loggers -- see the Phase 0 architecture decisions.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{requestId}] %logger{36} - %msg%n"
