@@ -1,516 +1,258 @@
-# \# QMSync
+# QMSync
+
+**Connected Quality Management System for Manufacturing Organizations**
+
+QMSync is an evolving manufacturing software platform designed to connect quality operations through structured digital workflows.
+
+The long-term vision is to connect:
+
+- Production Entry
+- Rejection Management
+- Non-Conformance Management (NCMR)
+- Corrective and Preventive Actions (CAPA)
+- Training Management
+- Evidence Management
+- Audit Management
+
+The goal is to improve traceability, consistency, and visibility across manufacturing quality operations.
+
+## Current Stage
+
+**Phase 1 — M1: Tenant Foundation**
+
+The initial backend foundation is implemented and running locally.
+
+This milestone introduces:
+
+- Spring Boot application foundation.
+- MySQL database connectivity.
+- Flyway migration infrastructure.
+- Spring Data JPA and Hibernate integration.
+- Initial tenant domain model.
+- Tenant context and persistence-time tenant stamping foundation.
+- Request correlation IDs for application logging.
+- Docker-based application and database deployment.
+
+**Important:** This is an early development foundation, not a completed QMS product. Authentication, complete tenant isolation, production database migrations, frontend screens, and manufacturing business workflows are still under development.
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Java 21 | Backend language |
+| Spring Boot 4.1.0 | Application framework |
+| Spring Data JPA | Persistence abstraction |
+| Hibernate 7.4.1 | ORM |
+| MySQL 8.4 | Relational database |
+| Flyway | Database migration management |
+| Testcontainers | Integration testing |
+| JUnit 5 | Automated testing |
+| Docker | Containerization |
+| Maven Wrapper | Build management |
 
-# 
+## Project Structure
+
+```text
+qmsync/
+├── .mvn/
+│   └── wrapper/
+├── src/
+│   ├── main/
+│   │   ├── java/com/qmsync/
+│   │   │   ├── QmsyncApplication.java
+│   │   │   ├── tenant/
+│   │   │   │   ├── Tenant.java
+│   │   │   │   ├── TenantContext.java
+│   │   │   │   └── TenantScopedEntity.java
+│   │   │   └── web/
+│   │   │       └── RequestCorrelationFilter.java
+│   │   └── resources/
+│   │       └── application.yml
+│   └── test/
+│       ├── java/com/qmsync/
+│       │   ├── testsupport/
+│       │   ├── tenant/
+│       │   ├── ConfigurationGuardTest.java
+│       │   ├── FlywayMigrationTest.java
+│       │   ├── HealthEndpointTest.java
+│       │   ├── PersistenceConfigurationTest.java
+│       │   └── QmsyncApplicationTests.java
+│       └── resources/
+│           ├── application.yml
+│           └── db/migration/
+│               └── V1__test_fixture.sql
+├── .env.example
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── mvnw
+├── mvnw.cmd
+└── pom.xml
+```
 
-# \*\*Connected Quality Management System for Manufacturing Organizations\*\*
+## Prerequisites
 
-# 
+- JDK 21
+- Docker Desktop with Docker Compose
+- Git (optional, for source control)
 
-# QMSync is an evolving manufacturing software platform designed to connect quality operations through structured digital workflows.
+Maven does not need to be installed separately. The Maven Wrapper downloads and uses the configured Maven distribution.
 
-# 
+## Configuration
 
-# The long-term vision is to connect:
+Create a local environment file:
 
-# 
+```cmd
+copy .env.example .env
+```
 
-# \- Production Entry
+Update `.env` with your local database credentials.
 
-# \- Rejection Management
+Required variables:
 
-# \- Non-Conformance Management (NCMR)
+```properties
+DB_NAME=qmsync
+DB_USERNAME=qmsync_app
+DB_PASSWORD=your_local_password
+DB_ROOT_PASSWORD=your_local_root_password
+```
 
-# \- Corrective and Preventive Actions (CAPA)
+Never commit `.env` or expose database credentials.
 
-# \- Training Management
+## Running with Docker Compose
 
-# \- Evidence Management
+Build and start the application and database:
 
-# \- Audit Management
+```cmd
+docker compose up --build -d
+```
 
-# 
+Check container status:
 
-# The goal is to improve traceability, consistency, and visibility across manufacturing quality operations.
+```cmd
+docker compose ps
+```
 
-# 
+The application runs on port `8080`.
 
-# \## Current Stage
+MySQL is exposed on host port `3307` and listens on port `3306` inside the container. The application connects to MySQL through the internal Docker service network.
 
-# 
+Stop the containers without deleting database data:
 
-# \*\*Phase 1 — M1: Tenant Foundation\*\*
+```cmd
+docker compose down
+```
 
-# 
+The named MySQL volume preserves database data between container restarts.
 
-# The initial backend foundation is implemented and running locally.
+## Running Tests
 
-# 
+On Windows CMD:
 
-# This milestone introduces:
+```cmd
+mvnw.cmd clean test
+```
 
-# 
+On Linux or macOS:
 
-# \- Spring Boot application foundation.
+```bash
+./mvnw clean test
+```
 
-# \- MySQL database connectivity.
+Integration tests use Testcontainers to run against a real MySQL instance. A working Docker daemon is required.
 
-# \- Flyway migration infrastructure.
+**Current verification:** 38 tests passed, with zero failures, zero errors, and zero skipped tests.
 
-# \- Spring Data JPA and Hibernate integration.
+## Building the Application
 
-# \- Initial tenant domain model.
+```cmd
+mvnw.cmd clean package
+```
 
-# \- Tenant context and persistence-time tenant stamping foundation.
+The executable Spring Boot JAR is generated under:
 
-# \- Request correlation IDs for application logging.
+```text
+target/qmsync.jar
+```
 
-# \- Docker-based application and database deployment.
+## Health Check
 
-# 
+Check application health:
 
-# \*\*Important:\*\* This is an early development foundation, not a completed QMS product. Authentication, complete tenant isolation, production database migrations, frontend screens, and manufacturing business workflows are still under development.
+```cmd
+curl http://localhost:8080/actuator/health
+```
 
-# 
+The endpoint reports application and database health.
 
-# \## Technology Stack
+A healthy response includes an overall `UP` status and a database component reporting `UP`.
 
-# 
+## Database and Flyway
 
-# | Technology | Purpose |
+Flyway is enabled and owns database schema management.
 
-# |---|---|
+Hibernate schema generation is explicitly disabled:
 
-# | Java 21 | Backend language |
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+```
 
-# | Spring Boot 4.1.0 | Application framework |
+No production application migration has been introduced in the current milestone.
 
-# | Spring Data JPA | Persistence abstraction |
+The migration at:
 
-# | Hibernate 7.4.1 | ORM |
+```text
+src/test/resources/db/migration/V1__test_fixture.sql
+```
 
-# | MySQL 8.4 | Relational database |
+is a test-only fixture used to verify Flyway integration against MySQL. It is not a production database migration.
 
-# | Flyway | Database migration management |
+## Multi-Tenancy Foundation
 
-# | Testcontainers | Integration testing |
+The current milestone introduces:
 
-# | JUnit 5 | Automated testing |
+- `Tenant`: initial tenant entity.
+- `TenantContext`: tenant context management using ThreadLocal.
+- `TenantScopedEntity`: persistence-time tenant ID stamping.
 
-# | Docker | Containerization |
+This is only the initial foundation.
 
-# | Maven Wrapper | Build management |
+Tenant authentication, request-level tenant resolution, automatic tenant-filtered reads, cross-tenant access protection, and complete tenant isolation are not yet implemented.
 
-# 
+## Current Development Status
 
-# \## Project Structure
+| Capability | Status |
+|---|---|
+| Spring Boot backend foundation | Implemented |
+| MySQL integration | Verified |
+| Flyway infrastructure | Verified |
+| Spring Data JPA integration | Implemented |
+| Initial tenant foundation | Implemented |
+| Request correlation filter | Implemented |
+| Docker application deployment | Verified locally |
+| Automated tests | 38 passed |
+| React frontend | Not yet implemented |
+| Authentication and authorization | Not yet implemented |
+| Complete tenant isolation | Not yet implemented |
+| Production QMS workflows | Not yet implemented |
 
-# 
+## Development Philosophy
 
-# ```text
+QMSync is being developed incrementally, with emphasis on:
 
-# qmsync/
+- Modular architecture.
+- Reliable database management.
+- Tenant-aware design.
+- Testable backend components.
+- Traceable manufacturing quality workflows.
+- Evidence-driven quality management.
 
-# ├── .mvn/
+The objective is to build a connected manufacturing QMS platform, one verified milestone at a time.
 
-# │   └── wrapper/
+---
 
-# ├── src/
-
-# │   ├── main/
-
-# │   │   ├── java/com/qmsync/
-
-# │   │   │   ├── QmsyncApplication.java
-
-# │   │   │   ├── tenant/
-
-# │   │   │   │   ├── Tenant.java
-
-# │   │   │   │   ├── TenantContext.java
-
-# │   │   │   │   └── TenantScopedEntity.java
-
-# │   │   │   └── web/
-
-# │   │   │       └── RequestCorrelationFilter.java
-
-# │   │   └── resources/
-
-# │   │       └── application.yml
-
-# │   └── test/
-
-# │       ├── java/com/qmsync/
-
-# │       │   ├── testsupport/
-
-# │       │   ├── tenant/
-
-# │       │   ├── ConfigurationGuardTest.java
-
-# │       │   ├── FlywayMigrationTest.java
-
-# │       │   ├── HealthEndpointTest.java
-
-# │       │   ├── PersistenceConfigurationTest.java
-
-# │       │   └── QmsyncApplicationTests.java
-
-# │       └── resources/
-
-# │           ├── application.yml
-
-# │           └── db/migration/
-
-# │               └── V1\_\_test\_fixture.sql
-
-# ├── .env.example
-
-# ├── .gitignore
-
-# ├── Dockerfile
-
-# ├── docker-compose.yml
-
-# ├── mvnw
-
-# ├── mvnw.cmd
-
-# └── pom.xml
-
-# ```
-
-# 
-
-# \## Prerequisites
-
-# 
-
-# \- JDK 21
-
-# \- Docker Desktop with Docker Compose
-
-# \- Git (optional, for source control)
-
-# 
-
-# Maven does not need to be installed separately. The Maven Wrapper downloads and uses the configured Maven distribution.
-
-# 
-
-# \## Configuration
-
-# 
-
-# Create a local environment file:
-
-# 
-
-# ```cmd
-
-# copy .env.example .env
-
-# ```
-
-# 
-
-# Update `.env` with your local database credentials.
-
-# 
-
-# Required variables:
-
-# 
-
-# ```properties
-
-# DB\_NAME=qmsync
-
-# DB\_USERNAME=qmsync\_app
-
-# DB\_PASSWORD=your\_local\_password
-
-# DB\_ROOT\_PASSWORD=your\_local\_root\_password
-
-# ```
-
-# 
-
-# Never commit `.env` or expose database credentials.
-
-# 
-
-# \## Running with Docker Compose
-
-# 
-
-# Build and start the application and database:
-
-# 
-
-# ```cmd
-
-# docker compose up --build -d
-
-# ```
-
-# 
-
-# Check container status:
-
-# 
-
-# ```cmd
-
-# docker compose ps
-
-# ```
-
-# 
-
-# The application runs on port `8080`.
-
-# 
-
-# MySQL is exposed on host port `3307` and listens on port `3306` inside the container. The application connects to MySQL through the internal Docker service network.
-
-# 
-
-# Stop the containers without deleting database data:
-
-# 
-
-# ```cmd
-
-# docker compose down
-
-# ```
-
-# 
-
-# The named MySQL volume preserves database data between container restarts.
-
-# 
-
-# \## Running Tests
-
-# 
-
-# On Windows CMD:
-
-# 
-
-# ```cmd
-
-# mvnw.cmd clean test
-
-# ```
-
-# 
-
-# On Linux or macOS:
-
-# 
-
-# ```bash
-
-# ./mvnw clean test
-
-# ```
-
-# 
-
-# Integration tests use Testcontainers to run against a real MySQL instance. A working Docker daemon is required.
-
-# 
-
-# \*\*Current verification:\*\* 38 tests passed, with zero failures, zero errors, and zero skipped tests.
-
-# 
-
-# \## Building the Application
-
-# 
-
-# ```cmd
-
-# mvnw.cmd clean package
-
-# ```
-
-# 
-
-# The executable Spring Boot JAR is generated under:
-
-# 
-
-# ```text
-
-# target/qmsync.jar
-
-# ```
-
-# 
-
-# \## Health Check
-
-# 
-
-# Check application health:
-
-# 
-
-# ```cmd
-
-# curl http://localhost:8080/actuator/health
-
-# ```
-
-# 
-
-# The endpoint reports application and database health.
-
-# 
-
-# A healthy response includes an overall `UP` status and a database component reporting `UP`.
-
-# 
-
-# \## Database and Flyway
-
-# 
-
-# Flyway is enabled and owns database schema management.
-
-# 
-
-# Hibernate schema generation is explicitly disabled:
-
-# 
-
-# ```yaml
-
-# spring:
-
-# &#x20; jpa:
-
-# &#x20;   hibernate:
-
-# &#x20;     ddl-auto: none
-
-# ```
-
-# 
-
-# No production application migration has been introduced in the current milestone.
-
-# 
-
-# The migration at:
-
-# 
-
-# ```text
-
-# src/test/resources/db/migration/V1\_\_test\_fixture.sql
-
-# ```
-
-# 
-
-# is a test-only fixture used to verify Flyway integration against MySQL. It is not a production database migration.
-
-# 
-
-# \## Multi-Tenancy Foundation
-
-# 
-
-# The current milestone introduces:
-
-# 
-
-# \- `Tenant`: initial tenant entity.
-
-# \- `TenantContext`: tenant context management using ThreadLocal.
-
-# \- `TenantScopedEntity`: persistence-time tenant ID stamping.
-
-# 
-
-# This is only the initial foundation.
-
-# 
-
-# Tenant authentication, request-level tenant resolution, automatic tenant-filtered reads, cross-tenant access protection, and complete tenant isolation are not yet implemented.
-
-# 
-
-# \## Current Development Status
-
-# 
-
-# | Capability | Status |
-
-# |---|---|
-
-# | Spring Boot backend foundation | Implemented |
-
-# | MySQL integration | Verified |
-
-# | Flyway infrastructure | Verified |
-
-# | Spring Data JPA integration | Implemented |
-
-# | Initial tenant foundation | Implemented |
-
-# | Request correlation filter | Implemented |
-
-# | Docker application deployment | Verified locally |
-
-# | Automated tests | 38 passed |
-
-# | React frontend | Not yet implemented |
-
-# | Authentication and authorization | Not yet implemented |
-
-# | Complete tenant isolation | Not yet implemented |
-
-# | Production QMS workflows | Not yet implemented |
-
-# 
-
-# \## Development Philosophy
-
-# 
-
-# QMSync is being developed incrementally, with emphasis on:
-
-# 
-
-# \- Modular architecture.
-
-# \- Reliable database management.
-
-# \- Tenant-aware design.
-
-# \- Testable backend components.
-
-# \- Traceable manufacturing quality workflows.
-
-# \- Evidence-driven quality management.
-
-# 
-
-# The objective is to build a connected manufacturing QMS platform, one verified milestone at a time.
-
-# 
-
-# \---
-
-# 
-
-# \*\*Project:\*\* QMSync  
-
-# \*\*Repository:\*\* https://github.com/theadarshh/qmsync
-
+**Project:** QMSync  
+**Repository:** https://github.com/theadarshh/qmsync
