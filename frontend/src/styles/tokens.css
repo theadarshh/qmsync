@@ -1,0 +1,41 @@
+/* Design tokens. Components read these variables; change a value here to restyle the whole app. */
+:root {
+  --color-bg: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef1f5;
+  --color-border: #d9dee6;
+  --color-text: #17212f;
+  --color-text-muted: #556070;
+  --color-primary: #0b5cad;
+  --color-primary-strong: #084a8c;
+  --color-primary-contrast: #ffffff;
+  --color-sidebar: #0f2236;
+  --color-sidebar-text: #c9d6e4;
+  --color-sidebar-hover: #19304a;
+  --color-sidebar-active: #1f4468;
+  --color-success: #14693a;
+  --color-success-bg: #e3f4ea;
+  --color-danger: #a42323;
+  --color-danger-bg: #fbe9e9;
+  --color-warning: #8a5a00;
+  --color-warning-bg: #fff3d9;
+  --color-planned: #2b4a99;
+  --color-planned-bg: #e8eefb;
+  --color-planned-border: #b7c6ee;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --sidebar-width: 17rem;
+  --topbar-height: 3.5rem;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --focus-ring: 0 0 0 3px rgba(11, 92, 173, 0.45);
+}
