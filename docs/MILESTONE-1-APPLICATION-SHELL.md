@@ -1,141 +1,564 @@
-# Milestone 1: Application shell
+# Milestone 1: Application Shell
 
-This is an additive overlay for the QMSync repository root. It adds files and changes none. It delivers the
-React + TypeScript + Vite application shell only: no business workflow, no authentication and no tenant isolation.
+## Overview
 
-Status: source delivered and partly verified. Steps marked BLOCKED in "Delivery verification record" were not
-executed in the packaging environment (no npm registry, Docker or Maven access) and must be run on your machine.
+This is an additive frontend implementation for the QMSync repository. It delivers the React + TypeScript + Vite application shell.
 
-## What this adds (51 files)
+The milestone establishes the frontend foundation without implementing business workflows, authentication, authorization, or complete tenant isolation.
+
+**Status: IMPLEMENTATION VERIFIED ON WINDOWS — 2026-11-26**
+
+The frontend application shell has passed local dependency installation, TypeScript checks, frontend tests, Vite production build, Docker Compose integration, backend regression tests, health checks, and desktop/mobile browser inspection.
+
+See the Windows Integration Verification Record below for the actual results.
+
+The original packaging-environment verification is retained as historical evidence. Its limitations were subsequently addressed where applicable through Windows integration testing.
+
+---
+
+## What This Adds
 
 | Path | Purpose |
-| --- | --- |
-| `frontend/` | React 19 + TypeScript + Vite app: shell, dashboard, placeholder pages, API client, tests |
-| `docker-compose.frontend.yml` | Separate Compose override that adds ONE service, `frontend`, on port 5173 |
-| `docs/MILESTONE-1-APPLICATION-SHELL.md` | This document |
-| `docs/MS1-OVERLAY-MANIFEST.txt` | SHA-256 and size of every other file in the overlay |
+|---|---|
+| `frontend/` | React 19 + TypeScript + Vite application: shell, dashboard, placeholder pages, API client, tests and styling |
+| `docker-compose.frontend.yml` | Separate Compose override adding one service, `frontend`, on port 5173 |
+| `docs/MILESTONE-1-APPLICATION-SHELL.md` | This milestone document |
+| `docs/MS1-OVERLAY-MANIFEST.txt` | SHA-256 hashes and file sizes from the original overlay |
 
-It does not touch the backend sources, `pom.xml`, the root `Dockerfile`, `docker-compose.yml`, `.gitignore`, `.env`,
-the MySQL volume or any migration. Your Windows MySQL host mapping `3307:3306` is not redefined anywhere, and inside
-the Compose network the backend keeps using `mysql:3306`. Nothing in the overlay reads or writes `.env`.
+The implementation does not modify the existing backend Java sources, `pom.xml`, root `Dockerfile`, root `docker-compose.yml`, root `.gitignore`, `.env`, MySQL volume, or database migrations.
 
-## What the shell does
+The Windows MySQL host mapping `3307:3306` is preserved. Inside the Docker Compose network, the backend continues to use `mysql:3306`.
 
-- Sidebar navigation: Dashboard plus the nine planned modules (Production Entry, Rejections, NCMR, CAPA, Training,
-  Evidence, Audit Center, Reports, Organization), grouped as Quality workflow, Insights and Administration.
-- Header with the current section and a user area that says plainly "Guest, not signed in" (no authentication yet).
-- Dashboard with honest empty states: seven indicator cards that say "No data yet" and a callout stating that nothing
-  has been recorded. No sample or hard-coded business figures exist anywhere.
-- One real backend call: the Backend status card reads `/actuator/health` through the dev proxy and shows
-  loading, UP/DOWN (application and database) or the reason the backend is unreachable.
-- Placeholder pages for modules B to J that state "not implemented yet" and list the planned capabilities.
-- Centralized API client (`src/api/client.ts`): base URL from `VITE_API_BASE_URL`, timeout, cancellation, JSON
-  handling, normalized `ApiError` (HTTP, NETWORK, TIMEOUT, ABORTED, PARSE) and `onError` listeners for central handling.
-- Responsive layout: permanent sidebar from 60rem, off-canvas drawer below it (Escape and the scrim close it);
-  skip link, landmarks, `aria-current`, visible focus ring and 44px touch targets.
+Nothing in the frontend overlay reads or writes the root `.env` file.
 
-## Integrate it (Windows PowerShell, from the repository root: the folder holding pom.xml and docker-compose.yml)
+---
 
-    git checkout -b feature/ms1-application-shell        # skip if the folder is not a Git repository
-    (Get-FileHash .\qmsync-ms1-frontend-overlay.zip -Algorithm SHA256).Hash   # compare with the .sha256 file
+## What the Application Shell Provides
 
-    # List conflicts BEFORE extracting (prints nothing when there are none)
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path .\qmsync-ms1-frontend-overlay.zip).Path)
-    $zip.Entries | Where-Object { $_.Name -ne "" -and (Test-Path $_.FullName) } | ForEach-Object { "CONFLICT: $($_.FullName)" }
-    $zip.Dispose()
+### 1. Navigation
 
-    # Extract (without -Force it refuses to overwrite an existing file)
-    Expand-Archive -Path .\qmsync-ms1-frontend-overlay.zip -DestinationPath .
+- Dashboard.
+- Production Entry.
+- Rejections.
+- NCMR.
+- CAPA.
+- Training.
+- Evidence.
+- Audit Center.
+- Reports.
+- Organization.
 
-To remove the overlay: delete `frontend/`, `docker-compose.frontend.yml` and the two files under `docs/`.
+Navigation is grouped into:
 
-## Run it
+- Quality Workflow
+- Insights
+- Administration
 
-Ports: frontend 5173, backend 8080, MySQL host port 3307 (unchanged, still yours).
+### 2. Application Header
 
-A. Dev server on the host (backend running on http://localhost:8080):
+- Displays the current section.
+- Provides mobile navigation controls.
+- Displays a user area identifying the current session as Guest, not signed in.
 
-    cd frontend
-    npm install            # generates package-lock.json: commit it
-    npm run dev            # http://localhost:5173
+Authentication has not been implemented.
 
-B. Docker Compose (adds only the frontend; running containers are not recreated):
+### 3. Dashboard
 
-    docker compose -f docker-compose.yml -f docker-compose.frontend.yml up -d --build --no-deps frontend
-    docker compose -f docker-compose.yml -f docker-compose.frontend.yml stop frontend      # stop only the frontend
+The dashboard contains seven quality indicator cards:
 
-Never run `docker compose down -v`: it deletes the MySQL data volume.
+- Production entries
+- Rejection rate
+- Open NCMRs
+- Open CAPAs
+- Training compliance
+- Evidence records
+- Audit readiness
 
-| Variable | Default | Where | Purpose |
-| --- | --- | --- | --- |
-| `VITE_API_BASE_URL` | empty (same origin) | `frontend/.env.local` | Base URL of API calls (browser-visible: no secrets) |
-| `QMSYNC_DEV_PROXY_TARGET` | `http://localhost:8080` | `frontend/.env.local` | Dev-server proxy target for `/api` and `/actuator` |
-| `QMSYNC_FRONTEND_PORT` | `5173` | shell or Compose `.env` | Host port of the frontend container |
-| `QMSYNC_BACKEND_URL` | `http://app:8080` | shell or Compose `.env` | Backend URL used by the frontend container |
+All indicators intentionally display empty states because business workflows and their data sources are not implemented.
 
-`http://app:8080` assumes your backend service is named `app` and listens on 8080 inside Docker (true for the CP3
-baseline). Check with `docker compose config --services`; if yours differs, set `QMSYNC_BACKEND_URL`.
+No fabricated sample business figures are displayed.
 
-## Verification you must run (record the results)
+### 4. Backend Health Integration
 
-    cd frontend
-    npm install
-    npm run typecheck      # tsc: app, tests and vite.config.ts
-    npm test               # Node test runner through tsx
-    npm run build          # typecheck, then the Vite production build into dist/
-    cd ..
-    docker compose -f docker-compose.yml -f docker-compose.frontend.yml up -d --build --no-deps frontend
-    docker compose -f docker-compose.yml -f docker-compose.frontend.yml ps
+The Backend Status card makes a real request to:
 
-Then open http://localhost:5173 (dashboard, sidebar, drawer below 960px width, Backend status card),
-`Invoke-RestMethod http://localhost:5173/actuator/health` (through the proxy) and
-`Invoke-RestMethod http://localhost:8080/actuator/health` (directly). Re-run the backend suite
-(`.\mvnw.cmd -B -ntp test`) to confirm your existing baseline is unaffected: the overlay changes no backend file.
+`/actuator/health`
 
-## Delivery verification record (packaging environment)
+The request is routed through the Vite development proxy.
 
-Environment: Node 22.23.4, TypeScript 6.0.3, tsx 4.23.12, esbuild 0.28.2, React and ReactDOM 19.2.8 from a pre-installed
-tool directory. The npm registry was unreachable (DNS failure for registry.npmjs.org), so `npm install` could not run and
-Vite, `@vitejs/plugin-react`, `@types/react` and `@types/react-dom` were not available.
+It displays:
+
+- Application status
+- Database status
+- Last checked time
+- Loading and error states
+
+### 5. Module Placeholder Pages
+
+Modules B through J have placeholder pages describing planned capabilities.
+
+These pages do not create or persist business records.
+
+### 6. Centralized API Client
+
+Location: `frontend/src/api/client.ts`
+
+Capabilities include:
+
+- Configurable API base URL through `VITE_API_BASE_URL`.
+- Request timeout.
+- Request cancellation.
+- JSON response handling.
+- Normalized `ApiError` types:
+  - HTTP
+  - NETWORK
+  - TIMEOUT
+  - ABORTED
+  - PARSE
+- Central error listeners through `onError`.
+
+### 7. Responsive Layout and Accessibility
+
+- Permanent sidebar at widths of 60rem and above.
+- Off-canvas mobile drawer below 60rem.
+- Escape key closes the mobile drawer.
+- Clicking the background scrim closes the drawer.
+- Selecting a navigation item closes the drawer.
+- Skip link.
+- Semantic landmarks.
+- `aria-current` navigation state.
+- Visible keyboard focus indicators.
+- 44px touch targets.
+
+---
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Frontend framework | React 19 |
+| Language | TypeScript |
+| Build tool | Vite 7 |
+| Styling | CSS |
+| Backend | Java 21 + Spring Boot 4.1.0 |
+| Database | MySQL 8.4 |
+| Containerization | Docker |
+| Container orchestration | Docker Compose |
+| Frontend tests | Node.js built-in test runner + tsx |
+| Backend tests | JUnit + Spring Boot Test + Testcontainers |
+
+---
+
+## Repository Structure
+
+```text
+qmsync/
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   └── ui/
+│   │   ├── hooks/
+│   │   ├── navigation/
+│   │   ├── pages/
+│   │   ├── router/
+│   │   ├── state/
+│   │   └── styles/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.ts
+│
+├── docs/
+│   ├── MILESTONE-1-APPLICATION-SHELL.md
+│   └── MS1-OVERLAY-MANIFEST.txt
+│
+├── docker-compose.frontend.yml
+│
+├── src/
+├── pom.xml
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Local Development
+
+Run the frontend from the repository root.
+
+### Option A: Host Development Server
+
+Requirements:
+
+- Node.js 22.12 or later.
+- npm.
+- Backend running on `http://localhost:8080`.
+
+Commands:
+
+```powershell
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+Frontend URL:
+
+`http://localhost:5173`
+
+### Option B: Docker Compose
+
+The frontend uses a separate Compose override.
+
+This keeps the existing backend and MySQL service definitions unchanged.
+
+Start the frontend:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.frontend.yml up -d --build --no-deps frontend
+```
+
+Check services:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.frontend.yml ps
+```
+
+Stop only the frontend:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.frontend.yml stop frontend
+```
+
+**Important:** Never run `docker compose down -v` during this milestone. It deletes the MySQL data volume.
+
+### Port Configuration
+
+| Service | Port |
+|---|---:|
+| Frontend | 5173 |
+| Backend | 8080 |
+| MySQL host mapping | 3307 |
+| MySQL container port | 3306 |
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_API_BASE_URL` | Empty (same origin) | Base URL for browser API requests |
+| `QMSYNC_DEV_PROXY_TARGET` | `http://localhost:8080` | Vite development proxy target |
+| `QMSYNC_FRONTEND_PORT` | `5173` | Frontend host port in Compose |
+| `QMSYNC_BACKEND_URL` | `http://app:8080` | Backend URL used by the frontend container |
+
+`VITE_API_BASE_URL` is browser-visible configuration and must never contain secrets.
+
+The default Docker proxy target `http://app:8080` assumes the backend Compose service is named `app` and listens on port 8080.
+
+---
+
+## Windows Integration Verification Record
+
+**Verification date:** November 26, 2026
+
+**Environment:**
+
+| Component | Version |
+|---|---|
+| Operating system | Windows |
+| Node.js | 22.22.0 |
+| npm | 10.9.4 |
+| Java | 21.0.1 |
+| Maven Wrapper distribution | 3.9.9 |
+| Docker Desktop | 29.9.3 |
+| Docker Compose | 5.7.1 |
+| MySQL container | 8.4.10 |
+| Spring Boot | 4.1.0 |
+| Vite | 7.3.8 |
+
+### 1. Frontend Verification
+
+| Check | Result | Evidence |
+|---|---|---|
+| `npm install` | PASS | Dependencies installed; package-lock generated |
+| `npm run typecheck` | PASS | Root, application and Node TypeScript projects |
+| `npm test` | PASS | 59 tests, 17 suites, zero failures |
+| `npm run build` | PASS | Actual Vite production build completed |
+| Build output | PASS | Production assets generated in `frontend/dist/` |
+| Dependency audit | PASS | npm reported zero vulnerabilities during installation |
+
+### 2. Backend Regression Verification
+
+The existing backend foundation was tested independently after the frontend integration.
+
+The normal `.\mvnw.cmd -B -ntp test` invocation did not launch Maven correctly in the Windows environment.
+
+The Maven Wrapper was therefore invoked directly through its wrapper JAR:
+
+```powershell
+$projectRoot = (Get-Location).Path
+
+java "-Dmaven.multiModuleProjectDirectory=$projectRoot" `
+  -cp ".mvn\wrapper\maven-wrapper.jar" `
+  org.apache.maven.wrapper.MavenWrapperMain `
+  -B -ntp test
+```
+
+Result:
+
+| Metric | Result |
+|---|---:|
+| Tests run | 38 |
+| Failures | 0 |
+| Errors | 0 |
+| Skipped | 0 |
+| Build result | SUCCESS |
+
+The test execution included the Testcontainers MySQL 8.4.10 integration and Flyway test fixture migration.
+
+### 3. Docker Compose Integration
+
+The existing MySQL and backend services were started first.
+
+The frontend was then added using the separate Compose override.
+
+Verified services:
+
+- `mysql`
+- `app`
+- `frontend`
+
+Results:
 
 | Check | Result |
-| --- | --- |
-| `npm run test` | EXECUTED, PASS: 59 tests in 17 suites, 59 passed, 0 failed (real React 19.2.8 server rendering) |
-| Mutation checks | EXECUTED: 7 of 7 deliberate breakages (health 503 handling, module codes, aria-current, empty-state wording, HTML error echo, database status default, JSON content type) were caught by the suite |
-| `tsc -p tsconfig.json` and `tsc -p tsconfig.app.json` | EXECUTED, exit 0, but against hand-written sandbox type shims for React, not the real `@types/react`: not a substitute for `npm run typecheck` |
-| `tsc -p tsconfig.node.json` (`vite.config.ts`) | EXECUTED, FAILED for an environmental reason: `vite` and `@vitejs/plugin-react` are not installed |
-| esbuild bundle of `src/main.tsx` | EXECUTED, exit 0 (minified `main.js` 215,309 bytes, `main.css` 8,994 bytes). This is a bundling sanity check, NOT the Vite production build |
-| Compose healthcheck command | EXECUTED: exit 0 with a listener on 127.0.0.1:5173, exit 1 without one |
-| Compose override structure | EXECUTED: parses as YAML, defines only `frontend`, no overlap with the CP3 baseline services, no volumes or networks, no MySQL or `DB_` settings |
-| Collision, secret and encoding scan | EXECUTED: 0 path collisions with the CP3 baseline, no forbidden paths, no secrets, ASCII only, LF line endings |
-| `npm install`, `npm run typecheck`, `npm run build` (Vite) | BLOCKED: npm registry unreachable. `package-lock.json` could not be generated |
-| Docker image build and `docker compose up` | BLOCKED: Docker is not available |
-| Browser access to the dashboard | BLOCKED: no browser or Docker. The responsive CSS and the drawer interaction have not been seen in a browser |
-| Backend `mvnw test` (38 tests) and `/actuator/health` | NOT EXECUTED: Maven and the stack are not available. No backend file is changed by this overlay |
+|---|---|
+| Compose service configuration | PASS |
+| MySQL container health | PASS |
+| Backend container startup | PASS |
+| Frontend container startup | PASS |
+| Frontend port 5173 | PASS |
+| Backend port 8080 | PASS |
+| MySQL host mapping 3307:3306 | PRESERVED |
+| Frontend container health | HEALTHY |
 
-CP3 (`qmsync-M1-3-test-corrections.tar.gz`) is historical baseline evidence used only for the collision check and the
-service names; it is not your current Windows repository, which was not inspected.
+### 4. Health Endpoint Verification
 
-## Design decisions
+Direct backend health endpoint:
 
-1. Additive overlay: new files only, so your working Windows configuration cannot be overwritten.
-2. Separate Compose override instead of editing `docker-compose.yml`: preserves your `3307:3306` mapping and `.env`.
-3. Dev-server proxy instead of CORS: the browser sees one origin, so the backend needed no change. Revisit when the
-   production deployment topology (reverse proxy or separate origins) is decided.
-4. Minimal History-API router behind `Router`, `Link`, `NavLink` and `useRoute`: the shell has static routes, and
-   `react-router-dom` could not be installed or verified in the packaging environment. Replace it when authenticated
-   routes and route parameters arrive (Module B onward); only `src/router` and its imports change.
-5. Node's built-in test runner with `tsx` instead of Vitest plus Testing Library: the tests were runnable and verified
-   in the packaging environment with no extra dependencies. They cover logic and server-rendered markup. Add a DOM
-   test stack when interactive forms arrive.
-6. Dependencies use caret ranges (react 19.2, vite 7, `@vitejs/plugin-react` 5, typescript 6): exact pins could not be
-   verified without the registry. Commit the `package-lock.json` that the first `npm install` generates; the Dockerfile
-   then uses `npm ci` automatically.
+`http://localhost:8080/actuator/health`
 
-## Known limitations
+Result: `UP`
 
-- Not tested: the mobile drawer interaction, `useBackendHealth` effect timing and `vite.config.ts` behaviour.
-- The Docker image runs the Vite dev server: appropriate for local development, not a production deployment.
-- Module placeholders create and show no records. Authentication, roles, tenant isolation and every business module
-  remain for later milestones (next: Module B, organization and identity).
+Frontend proxy health endpoint:
+
+`http://localhost:5173/actuator/health`
+
+Result: `UP`
+
+The frontend successfully reached the backend through the Vite development proxy.
+
+### 5. Desktop Browser Verification
+
+The dashboard was opened in Chrome.
+
+Verified:
+
+- Application shell renders.
+- Sidebar navigation is visible.
+- Header renders correctly.
+- Dashboard cards render.
+- Empty states are displayed.
+- Backend status card displays Application UP and Database UP.
+
+Result: PASS.
+
+### 6. Mobile Browser Verification
+
+The dashboard was inspected using responsive device emulation.
+
+Tested viewport widths:
+
+- 400px
+- 360px
+
+Verified:
+
+| Test | Result |
+|---|---|
+| Responsive dashboard layout | PASS |
+| Vertical card stacking | PASS |
+| No obvious horizontal overflow | PASS |
+| Mobile hamburger button | PASS |
+| Sidebar opens | PASS |
+| Sidebar closes through outside click | PASS |
+| Sidebar closes with Escape | PASS |
+| Sidebar closes after navigation | PASS |
+| Navigation labels remain readable | PASS |
+
+### 7. Browser Console
+
+The inspected browser Console screenshot showed no visible application errors.
+
+Three hidden messages were indicated by DevTools but were not individually inspected.
+
+Therefore, the recorded result is:
+
+**No visible application errors in the inspected browser session.**
+
+This is not a claim that every possible browser warning or hidden message has been eliminated.
+
+---
+
+## Historical Packaging-Environment Verification
+
+The original overlay was prepared in an environment with limited network and infrastructure access.
+
+Environment:
+
+- Node.js 22.23.4.
+- TypeScript 6.0.3.
+- tsx 4.23.12.
+- esbuild 0.28.2.
+- Pre-installed React and ReactDOM 19.2.8.
+
+The npm registry was unreachable due to DNS resolution failure. Docker and Maven were unavailable.
+
+The original checks were:
+
+| Check | Original result |
+|---|---|
+| Node test runner | 59 tests passed |
+| Mutation checks | 7 of 7 deliberate breakages detected |
+| Sandbox TypeScript checks | Partial; used hand-written React type shims |
+| Vite configuration typecheck | Blocked; Vite dependencies unavailable |
+| esbuild bundling | Passed; not a Vite production build |
+| Compose override static validation | Passed |
+| Collision, secret and encoding scan | Passed |
+| npm install | Blocked by registry DNS failure |
+| Docker image build | Blocked by unavailable Docker |
+| Browser verification | Blocked by unavailable browser |
+| Backend Maven tests | Not executed in that environment |
+
+These results are retained for historical traceability.
+
+The actual Windows integration results above supersede the original packaging-environment limitations wherever the same verification was subsequently performed.
+
+---
+
+## Design Decisions
+
+1. **Additive frontend implementation**
+
+   The frontend was introduced without replacing the existing backend foundation.
+
+2. **Separate Docker Compose override**
+
+   A separate Compose file adds the frontend service without modifying the existing backend or MySQL configuration.
+
+3. **Vite development proxy**
+
+   The frontend uses a development proxy for `/api` and `/actuator`, avoiding a backend CORS change for local development.
+
+   The production deployment topology must be decided separately.
+
+4. **Minimal History API router**
+
+   A lightweight History API router is used instead of introducing a routing dependency.
+
+   This is sufficient for the current static application shell. Authenticated routes and route parameters may require revisiting the router in a later milestone.
+
+5. **Node built-in test runner**
+
+   The frontend uses Node's built-in test runner with tsx instead of Vitest and Testing Library.
+
+   Current tests cover logic and server-rendered markup. A DOM testing stack should be considered when interactive business forms are introduced.
+
+6. **Dependency lockfile**
+
+   `package-lock.json` is committed to make dependency installation reproducible. The frontend Dockerfile uses `npm ci` when the lockfile is available.
+
+---
+
+## Known Limitations
+
+The following capabilities are intentionally outside MS1:
+
+- Authentication.
+- Authorization and role-based access control.
+- Organization onboarding.
+- Complete tenant isolation.
+- Production business workflows.
+- Production deployment configuration.
+- Persistent business records.
+- ERP and Tally integration.
+- Evidence Graph implementation.
+- Consistency Engine implementation.
+
+The frontend Docker image currently runs the Vite development server. It is appropriate for local development and integration testing, not production deployment.
+
+The module pages are placeholders and must not be interpreted as implemented business functionality.
+
+---
+
+## Milestone 1 Completion Criteria
+
+MS1 establishes the frontend application foundation.
+
+The following acceptance criteria have been verified:
+
+- [x] React + TypeScript + Vite application initialized.
+- [x] Responsive application shell implemented.
+- [x] Sidebar navigation implemented.
+- [x] Dashboard with intentional empty states implemented.
+- [x] Backend health integration implemented.
+- [x] Centralized API client implemented.
+- [x] Frontend tests passed.
+- [x] TypeScript checks passed.
+- [x] Vite production build passed.
+- [x] Backend regression tests passed.
+- [x] Docker Compose integration verified.
+- [x] Backend and database health verified.
+- [x] Desktop browser inspection completed.
+- [x] Mobile layout inspection completed.
+- [x] Mobile sidebar interaction checks completed.
+- [x] Feature branch committed and pushed.
+- [x] Pull Request #1 created for review.
+
+**Current Git milestone:**
+
+- Repository: `theadarshh/qmsync`
+- Branch: `feature/ms1-application-shell`
+- Commit: `07075b8`
+- Pull Request: #1
+- Target branch: `main`
+
+The implementation and local integration checks are complete. Final repository acceptance and merge remain subject to Pull Request review.
+
+---
+
+## Next Milestone
+
+**Module B — Organization and Identity**
+
+This milestone must have its own architecture and decision phase before implementation.
+
+Topics to define include:
+
+- Organization onboarding.
+- Tenant lifecycle.
+- User identity.
+- Authentication.
+- Sessions.
+- Organization membership.
+- Role-based access control.
+- Tenant resolution.
+- Tenant isolation.
+- Auditability.
+
+No Module B implementation should begin until the MS1 pull request has been reviewed and accepted.
