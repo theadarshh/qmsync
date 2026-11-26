@@ -1,0 +1,28 @@
+# QMSync frontend: additive Compose override (Milestone 1).
+#
+# Adds ONE service, "frontend". It does not define, rename or modify the existing "mysql" and "app"
+# services, their ports (including your Windows MySQL host port 3307), the .env file or the named
+# MySQL volume. The backend keeps using mysql:3306 inside the Compose network.
+#
+# Start only the frontend (existing containers are left untouched):
+#   docker compose -f docker-compose.yml -f docker-compose.frontend.yml up -d --build --no-deps frontend
+# Stop only the frontend:
+#   docker compose -f docker-compose.yml -f docker-compose.frontend.yml stop frontend
+# NEVER run "docker compose down -v": it deletes the MySQL data volume.
+#
+# Variables (optional, shell or .env): QMSYNC_FRONTEND_PORT (default 5173), QMSYNC_BACKEND_URL
+# (default http://app:8080, the backend service name and container port in docker-compose.yml).
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "${QMSYNC_FRONTEND_PORT:-5173}:5173"
+    environment:
+      QMSYNC_DEV_PROXY_TARGET: ${QMSYNC_BACKEND_URL:-http://app:8080}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

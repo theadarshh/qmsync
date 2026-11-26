@@ -1,0 +1,260 @@
+.shell {
+  min-height: 100vh;
+}
+
+/* Small screens: the sidebar is an off-canvas drawer. visibility:hidden keeps it out of the tab order while closed. */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  max-width: 85vw;
+  overflow-y: auto;
+  background: var(--color-sidebar);
+  color: var(--color-sidebar-text);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition:
+    transform 0.2s ease,
+    visibility 0s linear 0.2s;
+}
+
+.sidebar[data-open="true"] {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform 0.2s ease,
+    visibility 0s;
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.sidebar__logo {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.sidebar__nav {
+  flex: 1;
+  padding: 0 var(--space-3) var(--space-4);
+}
+
+.nav-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.nav-group {
+  margin-top: var(--space-5);
+}
+
+.nav-group__label {
+  padding: 0 var(--space-3) var(--space-2);
+  color: #8aa0b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-sidebar-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background: var(--color-sidebar-hover);
+  color: #ffffff;
+}
+
+.nav-link.is-active {
+  background: var(--color-sidebar-active);
+  color: #ffffff;
+}
+
+.nav-link .icon {
+  flex: none;
+}
+
+.sidebar__footer {
+  padding: var(--space-4) var(--space-5);
+  color: #8aa0b8;
+  font-size: 0.75rem;
+}
+
+.shell__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  border: 0;
+  background: rgba(15, 34, 54, 0.5);
+  cursor: pointer;
+}
+
+.shell__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.shell__main {
+  flex: 1;
+  width: 100%;
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+.shell__main:focus {
+  outline: none;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.topbar__menu {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.topbar__menu-icon,
+.topbar__menu-icon::before,
+.topbar__menu-icon::after {
+  display: block;
+  width: 1.125rem;
+  height: 2px;
+  background: var(--color-text);
+  content: "";
+}
+
+.topbar__menu-icon {
+  position: relative;
+}
+
+.topbar__menu-icon::before {
+  position: absolute;
+  top: -6px;
+}
+
+.topbar__menu-icon::after {
+  position: absolute;
+  top: 6px;
+}
+
+.topbar__section {
+  flex: 1;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.user-area__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.user-area__text {
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.user-area__name {
+  font-weight: 600;
+}
+
+.user-area__meta {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .user-area__text {
+    display: flex;
+  }
+
+  .shell__main {
+    padding: var(--space-6) var(--space-5);
+  }
+}
+
+/* Wide screens: the sidebar is permanently visible and the drawer controls disappear. */
+@media (min-width: 60rem) {
+  .sidebar {
+    max-width: none;
+    transform: none;
+    visibility: visible;
+    transition: none;
+  }
+
+  .shell__body {
+    margin-left: var(--sidebar-width);
+  }
+
+  .topbar__menu,
+  .shell__scrim {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar[data-open="true"] {
+    transition: none;
+  }
+}
